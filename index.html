@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Compiler</title>
+    <style>
+      #code {
+        width: 600px;
+        height: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <div><select id="select"></select></div>
+    <div>
+      <textarea id="code">print 1;</textarea>
+    </div>
+    <div>
+      <button id="run">run</button>
+    </div>
+    <div>
+      <span id="result"></span>
+    </div>
+    <script src="./lox.umd.js"></script>
+    <script>
+      function runText(text) {
+        const Lox = window.lox.Lox;
+        const Environment = window.lox.Environment;
+        new Lox().run(text, new Environment(null));
+      }
+      window.onload = function () {
+        const eventEmitter = window.lox.eventEmitter;
+        const textarea = document.querySelector('#code');
+        const button = document.querySelector('#run');
+        const result = document.querySelector('#result');
+        const select = document.querySelector('#select');
+        window.localStorage.setItem('debug', '*');
+        let dataList = [];
+        eventEmitter.on('print', function (data) {
+          if (result) {
+            const time = new Date().toLocaleString();
+            result.innerHTML =
+              result.innerHTML +
+              `<div>time: ${time}, result: ${
+                data.value
+              }, type: ${typeof data.value}</div>`;
+          }
+        });
+
+        fetch('./testData.json')
+          .then((res) => res.json())
+          .then((data = []) => {
+            dataList = data;
+            select.innerHTML = data
+              .map(
+                (item, index) =>
+                  ` <option value ="${item.name}" ${
+                    index === 0 ? 'selected="selected"' : ''
+                  }>${item.name}</option>`,
+              )
+              .join('');
+            textarea.value = data[0].text;
+          });
+
+        button.addEventListener('click', function () {
+          const text = (textarea && textarea.value) || '';
+          runText(text);
+        });
+
+        select.addEventListener('change', function (event) {
+          const item = dataList.find((v) => v.name === event.target.value);
+          if (item) {
+            textarea.value = item.text;
+          }
+        });
+      };
+    </script>
+  </body>
+</html>
